@@ -492,37 +492,66 @@ function setupAriaLiveRegions() {
   document.body.appendChild(liveRegion);
 }
 
-// Theme Toggle Functionality
-const themeToggle = document.getElementById("theme-toggle");
-const themeIcon = themeToggle.querySelector("i");
-
+// Theme Toggle Functionality - IMPROVED VERSION
 function initTheme() {
-  const savedTheme =
-    localStorage.getItem("theme") ||
-    (window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light");
-  if (savedTheme === "dark") {
-    document.documentElement.setAttribute("data-theme", "dark");
-    themeIcon.classList.remove("fa-moon");
-    themeIcon.classList.add("fa-sun");
+  try {
+    const btn = document.getElementById("theme-toggle");
+    console.log("🎯 initTheme() called - Button found:", !!btn);
+    
+    if (!btn) {
+      console.warn("⚠️ theme-toggle button not found");
+      return;
+    }
+    
+    function updateThemeIcon() {
+      const icon = btn.querySelector("i");
+      if (!icon) {
+        console.warn("⚠️ Icon not found inside button");
+        return;
+      }
+      
+      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+      icon.className = isDark ? "fas fa-sun" : "fas fa-moon";
+      console.log("🎨 Icon updated. Current theme:", isDark ? "DARK" : "LIGHT");
+    }
+    
+    // Load saved theme
+    const saved = localStorage.getItem("theme") || "light";
+    console.log("💾 Saved theme from storage:", saved);
+    
+    if (saved === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+    updateThemeIcon();
+    
+    // Toggle on click
+    btn.onclick = function(e) {
+      e.preventDefault();
+      console.log("🔘 BUTTON CLICKED!");
+      
+      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+      console.log("Current state before toggle:", isDark ? "DARK" : "LIGHT");
+      
+      if (isDark) {
+        document.documentElement.removeAttribute("data-theme");
+        localStorage.setItem("theme", "light");
+        console.log("✅ Switched to LIGHT");
+      } else {
+        document.documentElement.setAttribute("data-theme", "dark");
+        localStorage.setItem("theme", "dark");
+        console.log("✅ Switched to DARK");
+      }
+      
+      updateThemeIcon();
+    };
+    
+    console.log("✅ Theme toggle initialized successfully");
+  } catch(e) {
+    console.error("❌ Theme toggle error:", e);
   }
 }
-
-themeToggle.addEventListener("click", () => {
-  const currentTheme = document.documentElement.getAttribute("data-theme");
-  if (currentTheme === "dark") {
-    document.documentElement.removeAttribute("data-theme");
-    themeIcon.classList.remove("fa-sun");
-    themeIcon.classList.add("fa-moon");
-    localStorage.setItem("theme", "light");
-  } else {
-    document.documentElement.setAttribute("data-theme", "dark");
-    themeIcon.classList.remove("fa-moon");
-    themeIcon.classList.add("fa-sun");
-    localStorage.setItem("theme", "dark");
-  }
-});
 // --- Smarter Chatbot with Career Questions ---
 const chatbotKnowledge = {
   greetings: ["hello", "hi", "hey"],
@@ -1226,45 +1255,25 @@ function showCareerDetails(careerId) {
   const fit = calculateCareerFit(career);
 
   document.getElementById("modal-career-title").textContent = career.title;
-
   document.getElementById("career-details").innerHTML = `
-                <div class="career-detail-section"><h4>Overview</h4><p>${career.description
-    }</p></div>
-                <div class="career-detail-section"><h4>Required Skills</h4><div class="skills-list">${career.required_skills
+    <div class="career-detail-section"><h4>Overview</h4><p>${career.description}</p></div>
+    <div class="career-detail-section"><h4>Required Skills</h4><div class="skills-list">${career.required_skills
       .map((skill) => `<span class="skill-tag">${skill}</span>`)
       .join("")}</div></div>
-                <div class="career-detail-section"><h4>Salary Range</h4><p class="salary-range">${career.salary_range
-    }</p></div>
-                <div class="career-detail-section"><h4>Future Outlook</h4><p>${career.growth_outlook
-    }</p></div>
-                <div class="career-detail-section"><h4>Learning Path</h4><div class="learning-path">${career.learning_path
-      .map(
-        (step, index) =>
-          `<div class="learning-step"><div class="step-number-small">${index + 1
-          }</div><span>${step}</span></div>`
-      )
+    <div class="career-detail-section"><h4>Salary Range</h4><p class="salary-range">${career.salary_range}</p></div>
+    <div class="career-detail-section"><h4>Future Outlook</h4><p>${career.growth_outlook}</p></div>
+    <div class="career-detail-section"><h4>Learning Path</h4><div class="learning-path">${career.learning_path
+      .map((step, index) => `<div class="learning-step"><div class="step-number-small">${index + 1}</div><span>${step}</span></div>`)
       .join("")}</div></div>
-            `;
     <!-- Career Fit Summary -->
     <div class="career-detail-section">
       <h4>Career Fit Summary</h4>
       <p><strong>${fit.score}% Match</strong></p>
-      <p><strong>Strengths:</strong> ${
-        fit.matchedSkills.length
-          ? fit.matchedSkills.join(", ")
-          : "No strong matches yet"
-      }</p>
-      <p><strong>Skills to Improve:</strong> ${
-        fit.missingSkills.join(", ")
-      }</p>
+      <p><strong>Strengths:</strong> ${fit.matchedSkills.length ? fit.matchedSkills.join(", ") : "No strong matches yet"}</p>
+      <p><strong>Skills to Improve:</strong> ${fit.missingSkills.join(", ")}</p>
       <p><strong>Estimated Time to Job-Ready:</strong> ${fit.timeToReady}</p>
-
-      <button class="btn btn--primary mt-4"
-        onclick="chooseCareerPath(${career.id})">
-        Choose This Career Path
-      </button>
+      <button class="btn btn--primary mt-4" onclick="chooseCareerPath(${career.id})">Choose This Career Path</button>
     </div>
-
     <!-- Required Skills with Status -->
     <div class="career-detail-section">
       <h4>Required Skills</h4>
@@ -1272,72 +1281,57 @@ function showCareerDetails(careerId) {
         ${career.required_skills
           .map((skill) => {
             const skillLower = skill.toLowerCase();
-const exact = fit.matchedSkills.includes(skill);
-const partial = currentUser?.profile?.skills.some(
-  s =>
-    s.toLowerCase().includes(skillLower) ||
-    skillLower.includes(s.toLowerCase())
-);
+            const exact = fit.matchedSkills.includes(skill);
+            const partial = currentUser?.profile?.skills?.some(
+              (s) => s.toLowerCase().includes(skillLower) || skillLower.includes(s.toLowerCase())
+            );
 
-let cls = "skill-missing";
-let symbol = "✗";
+            let cls = "skill-missing";
+            let symbol = "✗";
 
-if (exact) {
-  cls = "skill-owned";
-  symbol = "✓";
-} else if (partial) {
-  cls = "skill-partial";
-  symbol = "~";
-}
+            if (exact) {
+              cls = "skill-owned";
+              symbol = "✓";
+            } else if (partial) {
+              cls = "skill-partial";
+              symbol = "~";
+            }
 
-return `
-  <span class="skill-tag ${cls}">
-    ${skill} ${symbol}
-  </span>`;
-
+            return `<span class="skill-tag ${cls}">${skill} ${symbol}</span>`;
           })
           .join("")}
       </div>
     </div>
-
-   <!-- Salary Breakdown -->
-<div class="career-detail-section">
-  <h4>Salary Range</h4>
-  ${
-    (() => {
-      const cleaned = career.salary_range
-        .replace("₹", "")
-        .replace(" LPA", "");
-      const [min, max] = cleaned.split("-");
-      return `
-        <ul>
-          <li><strong>Entry-level:</strong> ₹${min} LPA</li>
-          <li><strong>Mid-level:</strong> ₹${cleaned} LPA</li>
-          <li><strong>Senior-level:</strong> ₹${max} LPA</li>
-        </ul>
-      `;
-    })()
-  }
-</div>
-
-
+    <!-- Salary Breakdown -->
+    <div class="career-detail-section">
+      <h4>Salary Range</h4>
+      ${
+        (() => {
+          const cleaned = career.salary_range.replace("₹", "").replace(" LPA", "");
+          const [min, max] = cleaned.split("-");
+          return `
+            <ul>
+              <li><strong>Entry-level:</strong> ₹${min} LPA</li>
+              <li><strong>Mid-level:</strong> ₹${cleaned} LPA</li>
+              <li><strong>Senior-level:</strong> ₹${max} LPA</li>
+            </ul>
+          `;
+        })()
+      }
+    </div>
     <!-- Learning Path -->
     <div class="career-detail-section">
       <h4>Actionable Learning Path</h4>
       ${career.learning_path
         .map(
-          (step, index) => `
+          (step) => `
           <div class="topic-item">
             <div>
               <strong>${step}</strong>
               <span>Estimated: 4–6 weeks</span>
             </div>
-            <button class="btn btn--outline btn--sm"
-              onclick="showPage('learning')">
-              Start Learning
-            </button>
-          </div>
-        `
+            <button class="btn btn--outline btn--sm" onclick="showPage('learning')">Start Learning</button>
+          </div>`
         )
         .join("")}
     </div>
